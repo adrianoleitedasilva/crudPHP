@@ -22,7 +22,7 @@
 <body>
     <nav class="navbar bg-primary" data-bs-theme="dark">
         <div class="container">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="index.php">
                 <img src="favicon.png" alt="Logo" width="30" height="24" class="d-inline-block align-text-top">
                 CRUD Alunos
             </a>
