@@ -26,6 +26,7 @@
                     <th>Nome</th>
                     <th>Sobrenome</th>
                     <th>Idade</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             
@@ -47,6 +48,10 @@
                         <td><?php echo $row['nome']; ?></td>
                         <td><?php echo $row['sobrenome']; ?></td>
                         <td><?php echo $row['idade']; ?></td>
+                        <td>
+                            <a href="delete.php?id=<?php echo $row['id']; ?>" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i> Deletar</a>
+                            <a href="update.php?id=<?php echo $row['id']; ?>" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen-to-square"></i> Editar</a>
+                        </td>
                     </tr>
                     <?php 
                 }
