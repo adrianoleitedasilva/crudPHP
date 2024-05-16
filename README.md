@@ -1,5 +1,64 @@
 # crudPHP
 
+## Cadastrar
+
+```php
+<?php
+include 'dbcon.php';
+
+function isFormValid($data) {
+    return isset($data['nome'], $data['sobrenome'], $data['idade']) &&
+           !empty(trim($data['nome'])) &&
+           !empty(trim($data['sobrenome'])) &&
+           !empty(trim($data['idade']));
+}
+
+function insertAluno($connection, $nome, $sobrenome, $idade) {
+    $query = "INSERT INTO `alunos` (`nome`, `sobrenome`, `idade`) VALUES (?, ?, ?)";
+    $stmt = mysqli_prepare($connection, $query);
+    if (!$stmt) {
+        die("Preparation failed: " . mysqli_error($connection));
+    }
+    mysqli_stmt_bind_param($stmt, "ssi", $nome, $sobrenome, $idade);
+    $success = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+    return $success;
+}
+
+if (isset($_POST['adicionarAluno'])) {
+    if (!isFormValid($_POST)) {
+        header('Location: index.php?message=Favor preencher todos os campos!');
+        exit;
+    }
+
+    $nome = trim($_POST['nome']);
+    $sobrenome = trim($_POST['sobrenome']);
+    $idade = trim($_POST['idade']);
+
+    if (insertAluno($connection, $nome, $sobrenome, $idade)) {
+        header('Location: index.php?insert_message=Aluno registrado com sucesso');
+    } else {
+        die("Insertion failed: " . mysqli_error($connection));
+    }
+}
+
+?>
+```
+
+- **Função isFormValid**: Esta função verifica se os dados do formulário são válidos.
+- **Verifica se os campos 'nome', 'sobrenome' e 'idade'** estão definidos no array $data.
+- **Verifica se nenhum desses campos está vazio após serem removidos os espaços em branco**.
+- **Função insertAluno**: Esta função insere um novo aluno no banco de dados.
+- **Prepara uma declaração SQL** para inserir os dados do aluno na tabela 'alunos'.
+- **Liga as variáveis** aos marcadores de posição na declaração SQL.
+  - Executa a declaração preparada.
+  - Retorna true se a inserção for bem-sucedida e false caso contrário.
+- **Verificação do envio do formulário**: Verifica se o formulário foi enviado (provavelmente através do método POST) com o botão 'adicionarAluno'.
+- **Se o formulário não foi preenchido corretamente** (de acordo com a função isFormValid), redireciona de volta para a página inicial com uma mensagem de erro.
+  - Se os dados do formulário forem válidos, extrai os valores dos campos 'nome', 'sobrenome' e 'idade'.
+  - Chama a função insertAluno para inserir os dados do aluno no banco de dados.
+  - Se a inserção for bem-sucedida, redireciona de volta para a página inicial com uma mensagem de confirmação.
+  - Se a inserção falhar, exibe uma mensagem de erro.
 
 ## Update
 
@@ -88,3 +147,60 @@ A injeção de SQL pode ser devastadora para a segurança de um sistema, pois pe
 - **Princípio do menor privilégio**: Limitar as permissões de acesso do usuário ao banco de dados. Garanta que os usuários tenham apenas as permissões necessárias para realizar suas tarefas, reduzindo assim o impacto de um possível ataque de injeção de SQL.
 
 A prevenção eficaz da injeção de SQL é essencial para manter a segurança dos sistemas que interagem com bancos de dados e proteger as informações sensíveis dos usuários.
+
+# Deletando dados
+
+```php
+<?php
+include('dbcon.php');
+
+function deleteStudentById($connection, $id) {
+    $query = "DELETE FROM alunos WHERE id = ?";
+    $stmt = mysqli_prepare($connection, $query);
+    
+    if (!$stmt) {
+        die("Falha na preparação: " . mysqli_error($connection));
+    }
+    
+    mysqli_stmt_bind_param($stmt, "i", $id);
+    $success = mysqli_stmt_execute($stmt);
+    
+    if (!$success) {
+        die("Deu ruim: " . mysqli_error($connection));
+    }
+    
+    mysqli_stmt_close($stmt);
+    return $success;
+}
+
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    
+    if (filter_var($id, FILTER_VALIDATE_INT) === false) {
+        die("ID inválido");
+    }
+    
+    $wasDeleted = deleteStudentById($connection, $id);
+    
+    if ($wasDeleted) {
+        header('location:index.php?delete_msg=Registro removido da base de dados!');
+    } else {
+        die("Erro ao deletar o registro");
+    }
+}
+?>
+```
+
+- **Função deleteStudentById**: Esta função é definida para excluir um aluno do banco de dados com base no ID fornecido.
+- **mysqli_prepare**: Prepara uma declaração SQL para execução.
+- **mysqli_stmt_bind_param**: Liga variáveis a um statement SQL para execução.
+- **mysqli_stmt_execute**: Executa uma declaração preparada.
+- **mysqli_stmt_close**: Fecha uma declaração preparada.
+- **A função retorna true se a exclusão for bem-sucedida** e false caso contrário.
+- **Verificação do parâmetro GET 'id'**: Verifica se foi passado um parâmetro 'id' via GET na URL.
+- **Se não houver um ID fornecido**, o script não faz nada.
+- **Validação do ID**: Verifica se o ID fornecido é um número inteiro válido.
+- **Se o ID não for um número inteiro válido**, o script termina a execução e exibe "ID inválido".
+- **Exclusão do aluno**: Chama a função deleteStudentById com o ID fornecido.
+  - Se a exclusão for bem-sucedida, redireciona para 'index.php' com uma mensagem de confirmação.
+  - Se a exclusão falhar, exibe "Erro ao excluir registro".

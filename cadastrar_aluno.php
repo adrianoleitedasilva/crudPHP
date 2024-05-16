@@ -1,26 +1,40 @@
 <?php
-
 include 'dbcon.php';
 
-if(isset($_POST['adicionarAluno'])) {
-    // echo "pressionado";
+function isFormValid($data) {
+    return isset($data['nome'], $data['sobrenome'], $data['idade']) &&
+           !empty(trim($data['nome'])) &&
+           !empty(trim($data['sobrenome'])) &&
+           !empty(trim($data['idade']));
+}
 
-    // Criando as variáveis que vão receber os dados do formulário e gravar no BD
-    $nome = $_POST['nome'];
-    $sobrenome = $_POST['sobrenome'];
-    $idade = $_POST['idade'];
+function insertAluno($connection, $nome, $sobrenome, $idade) {
+    $query = "INSERT INTO `alunos` (`nome`, `sobrenome`, `idade`) VALUES (?, ?, ?)";
+    $stmt = mysqli_prepare($connection, $query);
+    if (!$stmt) {
+        die("Preparation failed: " . mysqli_error($connection));
+    }
+    mysqli_stmt_bind_param($stmt, "ssi", $nome, $sobrenome, $idade);
+    $success = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+    return $success;
+}
 
-    if($nome == "" || empty($nome) || $sobrenome == "" || empty($sobrenome) || $idade == "" || empty($idade)){
-        header('location:index.php?message=Favor preencher todos os campos!');
-    } else {
-        $query = "insert into `alunos` (`nome`, `sobrenome`, `idade`) values ('$nome', '$sobrenome', '$idade')";
-        $result = mysqli_query($connection, $query);
-
-        if(!$result){
-            die("Deu ruim".mysqli_error());
-        } else {
-            header('location:index.php?insert_message=Aluno registrado com sucesso');
-        }
+if (isset($_POST['adicionarAluno'])) {
+    if (!isFormValid($_POST)) {
+        header('Location: index.php?message=Favor preencher todos os campos!');
+        exit;
     }
 
+    $nome = trim($_POST['nome']);
+    $sobrenome = trim($_POST['sobrenome']);
+    $idade = trim($_POST['idade']);
+
+    if (insertAluno($connection, $nome, $sobrenome, $idade)) {
+        header('Location: index.php?insert_message=Aluno registrado com sucesso');
+    } else {
+        die("Insertion failed: " . mysqli_error($connection));
+    }
 }
+
+?>
